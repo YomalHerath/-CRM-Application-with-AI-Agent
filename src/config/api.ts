@@ -4,7 +4,7 @@ const isProduction = import.meta.env.MODE === 'production';
 // In development, we point to the XAMPP server.
 export const API_BASE_URL = isProduction
     ? "/api"
-    : "http://localhost:5000/api";
+    : "http://localhost/CRM Project/api";
 
 export const IMG_BASE_URL = isProduction
     ? "" // Relative to root

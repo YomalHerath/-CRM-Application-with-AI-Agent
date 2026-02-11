@@ -107,9 +107,9 @@ export default function LeadsTable() {
 
                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                         {loading ? (
-                            <TableRow><TableCell className="p-4 text-center" colSpan={5}>Loading...</TableCell></TableRow>
+                            <TableRow><td className="p-4 text-center" colSpan={5}>Loading...</td></TableRow>
                         ) : leads.length === 0 ? (
-                            <TableRow><TableCell className="p-4 text-center" colSpan={5}>No leads found</TableCell></TableRow>
+                            <TableRow><td className="p-4 text-center" colSpan={5}>No leads found</td></TableRow>
                         ) : (
                             leads.map((lead) => (
                                 <TableRow key={lead.id}>
@@ -188,7 +188,7 @@ export default function LeadsTable() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 mt-6">
-                        <Button variant="outline" onClick={(e) => { e.preventDefault(); setIsModalOpen(false); }}>Cancel</Button>
+                        <Button variant="outline" onClick={(e) => { e?.preventDefault(); setIsModalOpen(false); }}>Cancel</Button>
                         <Button type="submit">Add Lead</Button>
                     </div>
                 </form>

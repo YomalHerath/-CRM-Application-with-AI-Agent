@@ -17,7 +17,10 @@ interface CalendarEvent extends EventInput {
   };
 }
 
+import EventsTable from "../components/tables/EventsTable";
+
 const Calendar: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStartDate, setEventStartDate] = useState("");
@@ -47,8 +50,8 @@ const Calendar: React.FC = () => {
         const mappedEvents = data.map((e: any) => ({
           id: e.id,
           title: e.title,
-          start: e.start_date,
-          end: e.end_date,
+          start: e.start_date ? e.start_date.replace(" ", "T") : null,
+          end: e.end_date ? e.end_date.replace(" ", "T") : null,
           extendedProps: {
             calendar: e.calendar || "Primary",
             description: e.description || ""
@@ -146,132 +149,157 @@ const Calendar: React.FC = () => {
         title="Admin Panel | Calendar"
         description="Manage your CRM events and tasks"
       />
-      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="custom-calendar">
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            headerToolbar={{
-              left: "prev,next addEventButton",
-              center: "title",
-              right: "dayGridMonth,timeGridWeek,timeGridDay",
-            }}
-            events={filteredEvents}
-            selectable={true}
-            select={handleDateSelect}
-            eventClick={handleEventClick}
-            eventContent={renderEventContent}
-            customButtons={{
-              addEventButton: {
-                text: "Add Event +",
-                click: openModal,
-              },
-            }}
-          />
-        </div>
-        <Modal
-          isOpen={isOpen}
-          onClose={closeModal}
-          className="max-w-[700px] p-6 lg:p-10"
+
+      <div className="mb-6 flex justify-end gap-2">
+        <button
+          className={`px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'calendar' ? 'bg-brand-500 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'}`}
+          onClick={() => setViewMode('calendar')}
         >
-          <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+          Calendar View
+        </button>
+        <button
+          className={`px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'list' ? 'bg-brand-500 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'}`}
+          onClick={() => setViewMode('list')}
+        >
+          List View
+        </button>
+      </div>
+
+      {viewMode === 'calendar' ? (
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="custom-calendar">
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              headerToolbar={{
+                left: "prev,next addEventButton",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              events={filteredEvents}
+              selectable={true}
+              select={handleDateSelect}
+              eventClick={handleEventClick}
+              eventContent={renderEventContent}
+              customButtons={{
+                addEventButton: {
+                  text: "Add Event +",
+                  click: openModal,
+                },
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        <EventsTable />
+      )}
+
+      {/* Modal is shared/global, rendered outside conditional logic so it preserves state if needed, 
+          but technically only triggered from Calendar view currently. 
+          If you want 'Add Event' from Table view, you'd need to pass openModal to EventsTable or lift state. 
+          For now, keeping it simple as per request. */}
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[700px] p-6 lg:p-10"
+      >
+        <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+          <div>
+            <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+              {selectedEvent ? "Edit Event" : "Add Event"}
+            </h5>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Plan your next big moment
+            </p>
+          </div>
+          <div className="mt-8">
             <div>
-              <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-                {selectedEvent ? "Edit Event" : "Add Event"}
-              </h5>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Plan your next big moment
-              </p>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Event Title
+              </label>
+              <input
+                type="text"
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              />
             </div>
-            <div className="mt-8">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Event Title
-                </label>
-                <input
-                  type="text"
-                  value={eventTitle}
-                  onChange={(e) => setEventTitle(e.target.value)}
-                  className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                />
-              </div>
-              <div className="mt-6">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={eventDescription}
-                  onChange={(e) => setEventDescription(e.target.value)}
-                  className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                ></textarea>
-              </div>
+            <div className="mt-6">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Description
+              </label>
+              <textarea
+                rows={3}
+                value={eventDescription}
+                onChange={(e) => setEventDescription(e.target.value)}
+                className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              ></textarea>
+            </div>
 
-              <div className="mt-6">
-                <label className="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Priority
-                </label>
-                <div className="flex flex-wrap items-center gap-4 sm:gap-5">
-                  {Object.entries(calendarsEvents).map(([key, label]) => (
-                    <div key={key} className="n-chk">
-                      <label className="flex items-center text-sm text-gray-700 dark:text-gray-400 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="event-level"
-                          value={key}
-                          checked={eventLevel === key}
-                          onChange={() => setEventLevel(key)}
-                          className="mr-2"
-                        />
-                        {label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Start Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={eventStartDate}
-                  onChange={(e) => setEventStartDate(e.target.value)}
-                  className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                />
-              </div>
-
-              <div className="mt-6">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  End Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={eventEndDate}
-                  onChange={(e) => setEventEndDate(e.target.value)}
-                  className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                />
+            <div className="mt-6">
+              <label className="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-400">
+                Priority
+              </label>
+              <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+                {Object.entries(calendarsEvents).map(([key, label]) => (
+                  <div key={key} className="n-chk">
+                    <label className="flex items-center text-sm text-gray-700 dark:text-gray-400 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="event-level"
+                        value={key}
+                        checked={eventLevel === key}
+                        onChange={() => setEventLevel(key)}
+                        className="mr-2"
+                      />
+                      {label}
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
-              <button
-                onClick={closeModal}
-                className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:w-auto"
-              >
-                Close
-              </button>
-              <button
-                onClick={handleAddOrUpdateEvent}
-                className="flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-              >
-                {selectedEvent ? "Update Changes" : "Add Event"}
-              </button>
+
+            <div className="mt-6">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Start Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={eventStartDate}
+                onChange={(e) => setEventStartDate(e.target.value)}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+              />
+            </div>
+
+            <div className="mt-6">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                End Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={eventEndDate}
+                onChange={(e) => setEventEndDate(e.target.value)}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+              />
             </div>
           </div>
-        </Modal>
-      </div>
+          <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
+            <button
+              onClick={closeModal}
+              className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:w-auto"
+            >
+              Close
+            </button>
+            <button
+              onClick={handleAddOrUpdateEvent}
+              className="flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+            >
+              {selectedEvent ? "Update Changes" : "Add Event"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
