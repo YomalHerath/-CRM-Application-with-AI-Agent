@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
     Table,
     TableBody,
@@ -9,41 +8,26 @@ import {
 import Badge from "../ui/badge/Badge";
 import { API_BASE_URL } from "../../config/api";
 
-interface Event {
-    id: number;
-    title: string;
-    start_date: string;
-    end_date: string;
-    description: string;
-    calendar: string;
-    source: string;
+export interface Event {
+    id?: string;
+    title?: string;
+    start?: any;
+    end?: any;
+    extendedProps: {
+        calendar: string;
+        description: string;
+        source?: string;
+    };
 }
 
-export default function EventsTable() {
-    const [events, setEvents] = useState<Event[]>([]);
-
-    useEffect(() => {
-        fetchEvents();
-    }, []);
-
-    const fetchEvents = () => {
-        fetch(`${API_BASE_URL}/events`)
-            .then((res) => res.json())
-            .then((data) => {
-                setEvents(data);
-            })
-            .catch((err) => {
-                console.error("Error fetching events:", err);
-            });
-    };
-
-    const handleDelete = (id: number) => {
+export default function EventsTable({ events, refreshEvents }: { events: Event[], refreshEvents: () => void }) {
+    const handleDelete = (id: string) => {
         if (confirm("Are you sure you want to delete this event?")) {
             fetch(`${API_BASE_URL}/events?id=${id}`, {
                 method: "DELETE"
             })
                 .then(res => res.json())
-                .then(() => fetchEvents())
+                .then(() => refreshEvents())
                 .catch(err => console.error("Error deleting event:", err));
         }
     };
@@ -70,34 +54,34 @@ export default function EventsTable() {
                                         {event.title}
                                     </div>
                                     <div className="text-gray-500 text-theme-xs dark:text-gray-400">
-                                        {event.description}
+                                        {event.extendedProps.description}
                                     </div>
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                    {event.start_date}
+                                    {event.start ? event.start.replace("T", " ") : ""}
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                    {event.end_date}
+                                    {event.end ? event.end.replace("T", " ") : ""}
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                                     <Badge
                                         size="sm"
                                         color={
-                                            event.calendar === "Danger" ? "error" :
-                                                event.calendar === "Success" ? "success" :
-                                                    event.calendar === "Warning" ? "warning" : "primary"
+                                            event.extendedProps.calendar === "Danger" ? "error" :
+                                                event.extendedProps.calendar === "Success" ? "success" :
+                                                    event.extendedProps.calendar === "Warning" ? "warning" : "primary"
                                         }
                                     >
-                                        {event.calendar}
+                                        {event.extendedProps.calendar}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                    <Badge size="sm" color="light">{event.source}</Badge>
+                                    <Badge size="sm" color="light">{event.extendedProps.source || 'web'}</Badge>
                                 </TableCell>
                                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                                     <div className="flex -ml-2 space-x-2">
                                         <button
-                                            onClick={() => handleDelete(event.id)}
+                                            onClick={() => event.id && handleDelete(event.id)}
                                             className="inline-block p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
                                             title="Delete Event"
                                         >

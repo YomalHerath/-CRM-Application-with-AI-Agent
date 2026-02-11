@@ -48,7 +48,7 @@ const Calendar: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         const mappedEvents = data.map((e: any) => ({
-          id: e.id,
+          id: String(e.id),
           title: e.title,
           start: e.start_date ? e.start_date.replace(" ", "T") : null,
           end: e.end_date ? e.end_date.replace(" ", "T") : null,
@@ -192,7 +192,7 @@ const Calendar: React.FC = () => {
           </div>
         </div>
       ) : (
-        <EventsTable />
+        <EventsTable events={filteredEvents} refreshEvents={fetchEvents} />
       )}
 
       {/* Modal is shared/global, rendered outside conditional logic so it preserves state if needed, 
